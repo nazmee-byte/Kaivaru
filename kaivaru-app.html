@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kaivaru</title>
+<style>
+  :root{
+    --bg:#fff;--card:#fff;--surface:#f6f4ee;--border:#e4e1d6;
+    --text:#262520;--text2:#656254;--muted:#8b877a;
+    --accent:#0f6e56;--accent-bg:#e1f5ee;--danger:#b5442e;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    box-sizing:border-box;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#1b1a17;--card:#242319;--surface:#211f18;--border:#3a382d;
+      --text:#ece9df;--text2:#b5b2a5;--muted:#8b877a;
+      --accent:#5dcaa5;--accent-bg:#0d3f34;--danger:#e8917c;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-top:env(safe-area-inset-top,0px)}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .wrap{max-width:480px;margin:0 auto;padding:1rem 1rem 5rem}
+  h1{font-size:20px;margin:0.5rem 0 0.25rem}
+  .tag{color:var(--text2);font-size:13px;margin:0 0 1rem}
+  .tabs{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);
+    display:flex;gap:6px;padding:8px 0;border-bottom:1px solid var(--border);z-index:5}
+  .tab{flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:13px;
+    color:var(--text2);background:var(--surface);cursor:pointer;border:1px solid var(--border)}
+  .tab.active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:14px;margin:12px 0}
+  label{font-size:12px;color:var(--text2);display:block;margin:10px 0 4px}
+  input,select,textarea{width:100%;font-size:14px;padding:8px 10px;border-radius:8px;
+    border:1px solid var(--border);background:var(--bg);color:var(--text)}
+  textarea{min-height:60px;resize:vertical}
+  button{margin-top:14px;width:100%;padding:10px;border-radius:8px;border:none;
+    background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+  button.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+  .profile-row{display:flex;gap:10px;align-items:center}
+  .avatar{width:44px;height:44px;border-radius:10px;background:var(--surface);
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .name{font-weight:600;font-size:14px}
+  .meta{font-size:12px;color:var(--muted)}
+  .bio{font-size:13px;color:var(--text2);margin-top:6px}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;
+    border-radius:999px;margin-left:6px}
+  .badge.pending{background:#faeeda;color:#854f0b}
+  .badge.accepted{background:var(--accent-bg);color:var(--accent)}
+  .badge.family{background:#e6e2f7;color:#5b3fa8}
+  button.pay{background:#854f0b}
+  .sub-status{font-size:13px;padding:10px;border-radius:8px;background:var(--surface);margin-top:10px}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:2rem 0}
+  .contact{font-size:13px;background:var(--accent-bg);color:var(--accent);
+    border-radius:8px;padding:8px 10px;margin-top:8px}
+  .locked{font-size:12px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kaivaru 💍</h1>
+  <p class="tag">Find a life partner for marriage — family-involved, every step optional.</p>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="profile">My Profile</div>
+    <div class="tab" data-tab="browse">Browse</div>
+    <div class="tab" data-tab="interests">Interests</div>
+    <div class="tab" data-tab="family">Family</div>
+    <div class="tab" data-tab="messages">Messages</div>
+    <div class="tab" id="adminTabBtn" data-tab="admin" style="display:none">Admin</div>
+  </div>
+
+  <div id="profileTab"></div>
+  <div id="browseTab" style="display:none"></div>
+  <div id="interestsTab" style="display:none"></div>
+  <div id="familyTab" style="display:none"></div>
+  <div id="messagesTab" style="display:none"></div>
+  <div id="adminTab" style="display:none"></div>
+</div>
+
+<script>
+let db, user, myId, myProfile = null, allProfiles = {}, sentInterests = {}, receivedInterests = {};
+
+async function init() {
+  db = await claude.use("db");
+  user = await claude.use("user");
+  if (!db || !user) {
+    document.getElementById('profileTab').innerHTML = '<div class="empty">This app needs storage features that aren\'t available in this view.</div>';
+    return;
+  }
+  myId = user.id();
+  await loadMyProfile();
+  await loadAllProfiles();
+  await loadInterests();
+  renderProfileTab();
+  renderBrowseTab();
+  renderInterestsTab();
+}
+
+async function loadMyProfile() {
+  try {
+    const doc = await db.doc('profiles/' + myId).get();
+    myProfile = doc?.data || null;
+  } catch (e) { myProfile = null; }
+}
+
+async function loadAllProfiles() {
+  try {
+    const snap = await db.collection('profiles').get();
+    allProfiles = {};
+    (snap?.docs || []).forEach(d => { if (d.id !== myId) allProfiles[d.id] = d.data; });
+  } catch (e) { allProfiles = {}; }
+}
+
+async function loadInterests() {
+  sentInterests = {}; receivedInterests = {};
+  try {
+    const snap = await db.collection('interests').get();
+    (snap?.docs || []).forEach(d => {
+      const it = d.data;
+      if (it.from === myId) sentInterests[it.to] = it;
+      if (it.to === myId) receivedInterests[it.from] = it;
+    });
+  } catch (e) {}
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.getElementById('profileTab').style.display = name === 'profile' ? '' : 'none';
+  document.getElementById('browseTab').style.display = name === 'browse' ? '' : 'none';
+  document.getElementById('interestsTab').style.display = name === 'interests' ? '' : 'none';
+  document.getElementById('familyTab').style.display = name === 'family' ? '' : 'none';
+  document.getElementById('messagesTab').style.display = name === 'messages' ? '' : 'none';
+  document.getElementById('adminTab').style.display = name === 'admin' ? '' : 'none';
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+function renderProfileTab() {
+  const el = document.getElementById('profileTab');
+  const p = myProfile || {};
+  el.innerHTML = `
+    <div class="card">
+      <label>Full name</label>
+      <input id="f_name" value="${p.name || ''}" placeholder="Aishath Ali" />
+      <label>Age</label>
+      <input id="f_age" type="number" value="${p.age || ''}" placeholder="27" />
+      <label>Gender</label>
+      <select id="f_gender">
+        <option value="Female" ${p.gender==='Female'?'selected':''}>Female</option>
+        <option value="Male" ${p.gender==='Male'?'selected':''}>Male</option>
+      </select>
+      <label>Island / atoll</label>
+      <input id="f_island" value="${p.island || ''}" placeholder="Malé" />
+      <label>Profession</label>
+      <input id="f_profession" value="${p.profession || ''}" placeholder="Teacher" />
+      <label>About you</label>
+      <textarea id="f_bio" placeholder="A short note about yourself">${p.bio || ''}</textarea>
+      <label>Phone (only shared once a match is accepted)</label>
+      <input id="f_phone" value="${p.phone || ''}" placeholder="+960 7XX XXXX" />
+      <button id="saveProfileBtn">${myProfile ? 'Update profile' : 'Create profile'}</button>
+    </div>
+    ${myProfile ? `
+    <div class="card">
+      <div class="name">Subscription</div>
+      <div class="sub-status">${p.subscribed ? '✅ Kaivaru Standard active — you can view contact details for accepted matches.' : 'Free plan — accepted matches stay locked until your subscription is active.'}</div>
+      ${!p.subscribed ? `
+        <div class="meta" style="margin-top:8px">To activate (Rf 200/month):</div>
+        <div class="sub-status">1. Transfer Rf 200 to Kaivaru's BML account (add real account number here).<br>2. Message your name + transfer receipt on WhatsApp.<br>3. We'll activate your account within a few hours.</div>
+      ` : ''}
+    </div>` : ''}
+  `;
+  document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+}
+
+async function saveProfile() {
+  const data = {
+    name: document.getElementById('f_name').value.trim(),
+    age: document.getElementById('f_age').value.trim(),
+    gender: document.getElementById('f_gender').value,
+    island: document.getElementById('f_island').value.trim(),
+    profession: document.getElementById('f_profession').value.trim(),
+    bio: document.getElementById('f_bio').value.trim(),
+    phone: document.getElementById('f_phone').value.trim(),
+    updatedAt: Date.now()
+  };
+  if (!data.name || !data.age) { alert('Please add at least your name and age.'); return; }
+  try {
+    await db.doc('profiles/' + myId).set(data);
+    myProfile = data;
+    await loadAllProfiles();
+    renderBrowseTab();
+    switchTab('browse');
+  } catch (e) { alert('Could not save profile. Please try again.'); }
+}
+
+function renderBrowseTab() {
+  const el = document.getElementById('browseTab');
+  const ids = Object.keys(allProfiles);
+  if (!myProfile) {
+    el.innerHTML = '<div class="empty">Create your profile first to start browsing.</div>';
+    return;
+  }
+  if (ids.length === 0) {
+    el.innerHTML = '<div class="empty">No other profiles yet — check back soon.</div>';
+    return;
+  }
+  el.innerHTML = ids.map(id => {
+    const p = allProfiles[id];
+    const sent = sentInterests[id];
+    let btn = `<button data-id="${id}" class="sendInterestBtn">Send interest</button>`;
+    if (sent) {
+      if (sent.status === 'accepted') {
+        btn = myProfile.subscribed
+          ? `<div class="contact">Matched — contact: ${p.phone || 'not shared'}<br><button class="secondary" onclick="openConversation('${id}','${(p.name||'').replace(/'/g,"")}')">Open chat</button></div>`
+          : `<div class="locked">💍 Matched! Activate your subscription on the Profile tab to see contact info.</div>`;
+      } else {
+        btn = `<div class="locked">🔒 Interest sent — waiting on response</div>`;
+      }
+    }
+    return `
+      <div class="card">
+        <div class="profile-row">
+          <div class="avatar">👤</div>
+          <div>
+            <div class="name">${p.name}, ${p.age} ${p.familyVerified ? '<span class="badge family">Family verified</span>' : ''}</div>
+            <div class="meta">${p.gender || ''} · ${p.island || ''}</div>
+          </div>
+        </div>
+        ${p.profession ? `<div class="meta" style="margin-top:6px">${p.profession}</div>` : ''}
+        ${p.bio ? `<div class="bio">${p.bio}</div>` : ''}
+        ${btn}
+      </div>`;
+  }).join('');
+  el.querySelectorAll('.sendInterestBtn').forEach(b => b.addEventListener('click', () => sendInterest(b.dataset.id)));
+}
+
+async function sendInterest(toId) {
+  try {
+    await db.doc('interests/' + myId + '_' + toId).set({
+      from: myId, to: toId, status: 'pending', createdAt: Date.now()
+    });
+    await loadInterests();
+    renderBrowseTab();
+    renderInterestsTab();
+  } catch (e) { alert('Could not send interest. Please try again.'); }
+}
+
+async function acceptInterest(fromId) {
+  try {
+    await db.doc('interests/' + fromId + '_' + myId).update({ status: 'accepted' });
+    await loadInterests();
+    renderInterestsTab();
+    renderBrowseTab();
+  } catch (e) { alert('Could not accept. Please try again.'); }
+}
+
+function renderInterestsTab() {
+  const el = document.getElementById('interestsTab');
+  const receivedIds = Object.keys(receivedInterests);
+  const sentIds = Object.keys(sentInterests);
+  let html = '<h2 style="font-size:15px;margin:14px 0 6px">Received</h2>';
+  if (receivedIds.length === 0) {
+    html += '<div class="empty">No interests received yet.</div>';
+  } else {
+    html += receivedIds.map(id => {
+      const it = receivedInterests[id];
+      const p = allProfiles[id] || { name: 'A user' };
+      const badge = it.status === 'accepted' ? '<span class="badge accepted">Matched</span>' : '<span class="badge pending">Pending</span>';
+      const famBadge = p.familyVerified ? '<span class="badge family">Family verified</span>' : '';
+      let action = '';
+      if (it.status !== 'accepted') action = `<button data-id="${id}" class="acceptBtn">Accept</button>`;
+      else action = myProfile.subscribed ? `<div class="contact">Contact: ${p.phone || 'not shared'}<br><button class="secondary" onclick="openConversation('${id}','${(p.name||'').replace(/'/g,"")}')">Open chat</button></div>` : `<div class="locked">Activate your subscription on the Profile tab to see contact info.</div>`;
+      return `<div class="card">
+        <div class="name">${p.name || 'A user'} ${badge} ${famBadge}</div>
+        <div class="meta">${p.island || ''}</div>
+        ${action}
+      </div>`;
+    }).join('');
+  }
+  html += '<h2 style="font-size:15px;margin:18px 0 6px">Sent</h2>';
+  if (sentIds.length === 0) {
+    html += '<div class="empty">You haven\'t sent any interests yet.</div>';
+  } else {
+    html += sentIds.map(id => {
+      const it = sentInterests[id];
+      const p = allProfiles[id] || { name: 'A user' };
+      const badge = it.status === 'accepted' ? '<span class="badge accepted">Matched</span>' : '<span class="badge pending">Pending</span>';
+      const famBadge = p.familyVerified ? '<span class="badge family">Family verified</span>' : '';
+      let contact = '';
+      if (it.status === 'accepted') {
+        contact = myProfile.subscribed ? `<div class="contact">Contact: ${p.phone || 'not shared'}<br><button class="secondary" onclick="openConversation('${id}','${(p.name||'').replace(/'/g,"")}')">Open chat</button></div>` : `<div class="locked">Activate your subscription on the Profile tab to see contact info.</div>`;
+      }
+      return `<div class="card">
+        <div class="name">${p.name || 'A user'} ${badge} ${famBadge}</div>
+        ${contact}
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+  el.querySelectorAll('.acceptBtn').forEach(b => b.addEventListener('click', () => acceptInterest(b.dataset.id)));
+}
+
+function renderFamilyTab() {
+  const el = document.getElementById('familyTab');
+  el.innerHTML = `
+    <div class="card">
+      <div class="name">Family / guardian access</div>
+      <div class="meta" style="margin-top:4px">If a family member gave you their phone number, you can look up their profile here and add a family endorsement — this doesn't show you their private messages, only that they're on Kaivaru.</div>
+      <label>Their phone number</label>
+      <input id="famPhone" placeholder="+960 7XX XXXX" />
+      <button id="famSearchBtn">Find profile</button>
+    </div>
+    <div id="famResult"></div>
+  `;
+  document.getElementById('famSearchBtn').addEventListener('click', searchFamilyProfile);
+}
+
+async function searchFamilyProfile() {
+  const phone = document.getElementById('famPhone').value.trim();
+  const resultEl = document.getElementById('famResult');
+  if (!phone) return;
+  resultEl.innerHTML = '<div class="empty">Searching…</div>';
+  try {
+    const snap = await db.collection('profiles').get();
+    const match = (snap?.docs || []).find(d => d.data.phone === phone);
+    if (!match) {
+      resultEl.innerHTML = '<div class="empty">No profile found with that phone number.</div>';
+      return;
+    }
+    const p = match.data;
+    resultEl.innerHTML = `
+      <div class="card">
+        <div class="name">${p.name}, ${p.age} ${p.familyVerified ? '<span class="badge family">Family verified</span>' : ''}</div>
+        <div class="meta">${p.island || ''}</div>
+        ${!p.familyVerified ? `<button id="verifyBtn">Add family endorsement</button>` : `<div class="sub-status">You've already endorsed this profile.</div>`}
+      </div>`;
+    const verifyBtn = document.getElementById('verifyBtn');
+    if (verifyBtn) verifyBtn.addEventListener('click', () => verifyFamily(match.id));
+  } catch (e) {
+    resultEl.innerHTML = '<div class="empty">Something went wrong searching. Please try again.</div>';
+  }
+}
+
+async function verifyFamily(profileId) {
+  try {
+    await db.doc('profiles/' + profileId).update({ familyVerified: true });
+    await loadAllProfiles();
+    searchFamilyProfile();
+    renderBrowseTab();
+    renderInterestsTab();
+  } catch (e) { alert('Could not add endorsement. Please try again.'); }
+}
+
+function renderMessagesTab() {
+  const el = document.getElementById('messagesTab');
+  if (!el.dataset.inited) {
+    el.innerHTML = '<div class="empty">Open a chat from an accepted match in Browse or Interests.</div>';
+  }
+}
+
+function switchTabToMessages() { switchTab('messages'); }
+
+async function openConversation(otherId, otherName) {
+  switchTab('messages');
+  const convId = [myId, otherId].sort().join('_');
+  const el = document.getElementById('messagesTab');
+  el.dataset.inited = '1';
+  el.innerHTML = `
+    <div class="card">
+      <div class="name">${otherName || 'Chat'}</div>
+      <div id="msgList" style="margin-top:8px;max-height:280px;overflow-y:auto"></div>
+      <input id="msgInput" placeholder="Type a message" style="margin-top:10px" />
+      <button id="msgSendBtn">Send</button>
+    </div>`;
+  await loadMessages(convId);
+  document.getElementById('msgSendBtn').addEventListener('click', () => sendMessage(convId, otherId));
+}
+
+async function loadMessages(convId) {
+  const list = document.getElementById('msgList');
+  try {
+    const snap = await db.collection('messages').where('convId', '==', convId).get();
+    const msgs = (snap?.docs || []).map(d => d.data).sort((a, b) => a.createdAt - b.createdAt);
+    list.innerHTML = msgs.length ? msgs.map(m => `
+      <div style="text-align:${m.from === myId ? 'right' : 'left'};margin:6px 0">
+        <span style="display:inline-block;background:${m.from === myId ? 'var(--accent-bg)' : 'var(--surface)'};color:${m.from === myId ? 'var(--accent)' : 'var(--text)'};padding:6px 10px;border-radius:10px;font-size:13px;max-width:80%">${m.text}</span>
+      </div>`).join('') : '<div class="empty">No messages yet — say hello.</div>';
+    list.scrollTop = list.scrollHeight;
+  } catch (e) { list.innerHTML = '<div class="empty">Could not load messages.</div>'; }
+}
+
+async function sendMessage(convId, otherId) {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text) return;
+  try {
+    const id = convId + '_' + Date.now();
+    await db.doc('messages/' + id).set({ convId, from: myId, to: otherId, text, createdAt: Date.now() });
+    input.value = '';
+    await loadMessages(convId);
+  } catch (e) { alert('Could not send message. Please try again.'); }
+}
+
+async function renderAdminTab() {
+  if (!user.isOwner || !user.isOwner()) return;
+  document.getElementById('adminTabBtn').style.display = '';
+  const el = document.getElementById('adminTab');
+  try {
+    const profSnap = await db.collection('profiles').get();
+    const intSnap = await db.collection('interests').get();
+    const docs = profSnap?.docs || [];
+    const interests = (intSnap?.docs || []).map(d => d.data);
+    const totalProfiles = docs.length;
+    const totalInterests = interests.length;
+    const totalMatches = interests.filter(i => i.status === 'accepted').length;
+    const totalSubscribed = docs.filter(d => d.data.subscribed).length;
+
+    let html = `
+      <div class="card">
+        <div class="name">Kaivaru stats</div>
+        <div class="meta" style="margin-top:6px">Signups: <strong>${totalProfiles}</strong></div>
+        <div class="meta">Interests sent: <strong>${totalInterests}</strong></div>
+        <div class="meta">Matches (accepted): <strong>${totalMatches}</strong></div>
+        <div class="meta">Subscribed / paying: <strong>${totalSubscribed}</strong></div>
+      </div>`;
+
+    html += docs.length ? docs.map(d => {
+      const p = d.data;
+      return `<div class="card">
+        <div class="name">${p.name || 'Unnamed'} — ${p.phone || 'no phone'}</div>
+        <div class="meta">${p.subscribed ? '✅ Subscribed' : '⏳ Not subscribed'}</div>
+        ${!p.subscribed ? `<button id="verify_${d.id}">Verify payment received</button>` : ''}
+      </div>`;
+    }).join('') : '<div class="empty">No profiles yet.</div>';
+    el.innerHTML = html;
+    docs.forEach(d => {
+      const btn = document.getElementById('verify_' + d.id);
+      if (btn) btn.addEventListener('click', () => markSubscribed(d.id));
+    });
+  } catch (e) { el.innerHTML = '<div class="empty">Could not load admin data.</div>'; }
+}
+
+async function markSubscribed(profileId) {
+  try {
+    await db.doc('profiles/' + profileId).update({ subscribed: true });
+    await loadAllProfiles();
+    renderAdminTab();
+  } catch (e) { alert('Could not update. Please try again.'); }
+}
+
+init().then(() => { renderFamilyTab(); renderMessagesTab(); renderAdminTab(); });
+</script>
+</body>
+</html>
