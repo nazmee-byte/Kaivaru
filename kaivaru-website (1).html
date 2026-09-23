@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaivaru — Maldives' Matrimony Platform | ކައިވަރު</title>
+<meta name="description" content="Kaivaru — the Maldives' first Dhivehi-first matrimony platform. Verified profiles. Full privacy. Built on Islamic values.">
+<style>
+  :root{
+    --teal:#0E7C7B; --teal-dark:#0A5C5B; --coral:#FF6B5B;
+    --sand:#FAF6F0; --ink:#1F2A33; --muted:#5C6B76;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:var(--sand);color:var(--ink);line-height:1.6}
+  .container{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  /* NAV */
+  nav{position:sticky;top:0;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.06);z-index:50}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{font-size:26px;font-weight:800;color:var(--teal);text-decoration:none}
+  .logo span{color:var(--coral)}
+  .lang-btn{border:2px solid var(--teal);color:var(--teal);background:#fff;padding:7px 16px;border-radius:20px;font-weight:700;cursor:pointer;font-size:14px}
+  .lang-btn:hover{background:var(--teal);color:#fff}
+
+  /* HERO */
+  .hero{padding:80px 0 60px;text-align:center;background:linear-gradient(180deg,#E6F4F4 0%,var(--sand) 100%)}
+  .hero h1{font-size:clamp(28px,5vw,48px);line-height:1.25;margin-bottom:16px}
+  .hero p.lead{font-size:clamp(16px,2.5vw,20px);color:var(--muted);max-width:640px;margin:0 auto 28px}
+  .brand{color:var(--teal);font-weight:800}
+  .btn{display:inline-block;background:var(--coral);color:#fff;padding:15px 40px;border-radius:30px;font-size:18px;font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:.2s}
+  .btn:hover{background:#e55747;transform:translateY(-2px)}
+
+  /* SECTIONS */
+  section{padding:60px 0}
+  h2{font-size:clamp(24px,4vw,34px);text-align:center;margin-bottom:40px;color:var(--teal-dark)}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
+  .card{background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 4px 16px rgba(0,0,0,.05);text-align:center}
+  .card .icon{font-size:40px;margin-bottom:14px}
+  .card h3{margin-bottom:10px;font-size:19px}
+  .card p{color:var(--muted);font-size:15px}
+
+  /* STEPS */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;counter-reset:step}
+  .step{background:#fff;border-radius:16px;padding:30px;position:relative;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+  .step::before{counter-increment:step;content:counter(step);position:absolute;top:-18px;left:24px;width:38px;height:38px;background:var(--teal);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+
+  /* FORM */
+  .waitlist{background:var(--teal);color:#fff}
+  .waitlist h2{color:#fff}
+  form{max-width:520px;margin:0 auto;background:#fff;color:var(--ink);padding:36px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  .form-row{margin-bottom:18px}
+  label{display:block;font-weight:600;margin-bottom:6px;font-size:14px}
+  input,select{width:100%;padding:12px;border:2px solid #E2E8EC;border-radius:8px;font-size:15px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--teal)}
+  .radios{display:flex;gap:18px;flex-wrap:wrap}
+  .radios label{display:flex;align-items:center;gap:6px;font-weight:400}
+  .radios input{width:auto}
+  .fine{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+  .success{display:none;text-align:center;padding:30px 10px}
+  .success h3{color:var(--teal);margin-bottom:10px}
+
+  /* FAQ */
+  details{background:#fff;border-radius:12px;margin-bottom:14px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  summary{font-weight:700;cursor:pointer;font-size:16px}
+  details p{margin-top:12px;color:var(--muted)}
+
+  footer{background:var(--ink);color:#B9C6CF;text-align:center;padding:30px 0;font-size:14px}
+  footer strong{color:#fff}
+
+  [dir="rtl"] body{letter-spacing:0}
+  .dhivehi{font-family:'MV Typewriter','Faruma','Noto Sans Thaana','Segoe UI',sans-serif}
+</style>
+</head>
+<body>
+
+<nav><div class="container nav-inner">
+  <a class="logo" href="#">Kai<span>varu</span></a>
+  <button class="lang-btn" onclick="toggleLang()" id="langBtn">ދިވެހިބަސް</button>
+</div></nav>
+
+<!-- HERO -->
+<header class="hero"><div class="container">
+  <h1 data-en="Find your life partner, the Maldivian way." data-dv="ދިވެހި ގޮތުގެ މަތިން ދިވެހި އުފަންވުމަށް ތައްޔާރުވޭ">Find your life partner, the Maldivian way.</h1>
+  <p class="lead" data-en="Kaivaru — the Maldives' first Dhivehi-first matrimony platform. Verified profiles. Full privacy. Built on Islamic values." data-dv="ކައިވަރު — ދިވެހި ބަހުން ޚިދުމަތް ދޭން ފަށާ ފުރަތަމަ ކައިވެނި ޕްލެޓްފޯމް. ޔަގީންކުރެވިފައިވާ ޕްރޮފައިލް. މުޅިން ޝަރުޢީ. އިސްލާމީ އަސާސްތަކުގެ މައްޗަށް."><span class="brand">Kaivaru</span> — the Maldives' first Dhivehi-first matrimony platform. Verified profiles. Full privacy. Built on Islamic values.</p>
+  <a class="btn" href="#waitlist" data-en="Join the Waitlist 🔒" data-dv="ވެއިޓްލިސްޓްގައި ނަން ލިޔޭ 🔒">Join the Waitlist 🔒</a>
+</div></header>
+
+<!-- WHY -->
+<section><div class="container">
+  <h2 data-en="Why Kaivaru?" data-dv="ކައިވަރު އަށް ކީއްވެ؟">Why Kaivaru?</h2>
+  <div class="cards">
+    <div class="card"><div class="icon">✅</div><h3 data-en="Verified Profiles" data-dv="ޔަގީންކުރެވިފައިވާ ޕްރޮފައިލް">Verified Profiles</h3><p data-en="Every member verifies with their National ID. No fakes, no catfish." data-dv="ކޮންމެ މެމްބަރަކީ ވެސް ޤައުމީ ކާޑުން ޔަގީންކުރެވޭ. ބޯޑު ޕްރޮފައިލް ނެތް.">Every member verifies with their National ID. No fakes, no catfish.</p></div>
+    <div class="card"><div class="icon">🔐</div><h3 data-en="Privacy First" data-dv="ޝަރުޢީ އިންތިޒާމް">Privacy First</h3><p data-en="Your photo stays hidden until YOU accept a match. Block and report anytime." data-dv="ތިޔަ ފޮޓޯ ފޮރުވިފައި، ކަމާ އެއްބަސްވޭ ދުވަހު މެދުވެރިކޮށް. ކޮންމެ ވަގަކު ވެސް ބްލޮކް ކުރެވޭނެ.">Your photo stays hidden until YOU accept a match. Block and report anytime.</p></div>
+    <div class="card"><div class="icon">🕌</div><h3 data-en="Islamic Values" data-dv="އިސްލާމީ އަސާސްތައް">Islamic Values</h3><p data-en="No casual dating culture. Marriage-only intentions — family involvement welcome." data-dv="ކުޅޭގޮތެއް ނޫން. ހަމަ ކައިވެނިއަށް — ޢާއިލާއިން ބައިވެރިވުމަށް ހުޅުވިފައި.">No casual dating culture. Marriage-only intentions — family involvement welcome.</p></div>
+  </div>
+</div></section>
+
+<!-- HOW IT WORKS -->
+<section style="background:#fff"><div class="container">
+  <h2 data-en="How It Works" data-dv="ކޮންމެހެން މަސައްކަތްކުރަނީ؟">How It Works</h2>
+  <div class="steps">
+    <div class="step"><h3 data-en="Create your profile" data-dv="ޕްރޮފައިލް ހަދާލާ">Create your profile</h3><p data-en="In Dhivehi or English — takes 5 minutes." data-dv="ދިވެހިބަހުން ނުވަތަ އިނގިރޭސިބަހުން — 5 މިނެޓް ނެގޭ.">In Dhivehi or English — takes 5 minutes.</p></div>
+    <div class="step"><h3 data-en="Get verified" data-dv="ޔަގީންކުރޭ">Get verified</h3><p data-en="Quick National ID check, done once." data-dv="ނޭޝަނަލް އައިޑީ ބަލައިގެން، އެއްފަހަރަކު ނިމޭ.">Quick National ID check, done once.</p></div>
+    <div class="step"><h3 data-en="Connect" data-dv="ގުޅޭ">Connect</h3><p data-en="Send an interest, chat when they accept." data-dv="އިންޓަރެސްޓް ފޮނުވާ، ގަބޫލުކުރީމަ ޗެޓް ކުރޭ.">Send an interest, chat when they accept.</p></div>
+  </div>
+</div></section>
+
+<!-- WAITLIST -->
+<section class="waitlist" id="waitlist"><div class="container">
+  <h2 data-en="Be First at Launch" data-dv="ފުރަތަމަ ދުވަހު އަހަރެމެންނާ ގުޅޭ">Be First at Launch</h2>
+  <form id="wlForm" onsubmit="return submitForm(event)">
+    <div id="formFields">
+      <div class="form-row"><label data-en="Full Name" data-dv="ފުރިހަމަ ނަން">Full Name</label><input required id="f_name"></div>
+      <div class="form-row"><label data-en="Mobile Number" data-dv="މޯބައިލް ނަންބަރު">Mobile Number</label><input required id="f_phone" type="tel" placeholder="7XX XXXX"></div>
+      <div class="form-row"><label>Email</label><input required id="f_email" type="email"></div>
+      <div class="form-row"><label data-en="Island / Atoll" data-dv="ރަށް / އަތޮޅު">Island / Atoll</label><input required id="f_island"></div>
+      <div class="form-row"><label data-en="Gender" data-dv="ޖިންސު">Gender</label>
+        <div class="radios">
+          <label><input type="radio" name="gender" required> <span data-en="Male" data-dv="ފިރިހެން">Male</span></label>
+          <label><input type="radio" name="gender" required> <span data-en="Female" data-dv="އަންހެން">Female</span></label>
+        </div>
+      </div>
+      <div class="form-row"><label data-en="Marital Status" data-dv="ކައިވެނި ހަލާސް">Marital Status</label>
+        <div class="radios">
+          <label><input type="radio" name="status" required> <span data-en="Never married" data-dv="ކައިވެނި ނުކޮށް">Never married</span></label>
+          <label><input type="radio" name="status" required> <span data-en="Divorced" data-dv="ވަކިވެފައި">Divorced</span></label>
+          <label><input type="radio" name="status" required> <span data-en="Widowed" data-dv="އަނބުރާ މަރުވެފައި">Widowed</span></label>
+        </div>
+      </div>
+      <button class="btn" type="submit" style="width:100%" data-en="Notify Me at Launch 🚀" data-dv="ފުރަތަމަ ދުވަހު އަޅާލަން ބުނާލާ 🚀">Notify Me at Launch 🚀</button>
+      <p class="fine" data-en="Your details stay private. Never shared, never sold." data-dv="ތިޔަ މަޢުލޫމާތު ޝަރީއަކުން ހިއްސާއެއް ނުކުރެވޭ.">Your details stay private. Never shared, never sold.</p>
+    </div>
+    <div class="success" id="formSuccess">
+      <h3>ޝުކުރިއްޔާ! Shukuriya! 🎉</h3>
+      <p data-en="You are on the Kaivaru waitlist. We will notify you at launch, Insha'Allah." data-dv="ތިޔަ ކައިވަރު ވެއިޓްލިސްޓްގައި އެވެ. އިންޝާﷲ، ފުރަތަމަ ދުވަހު އަޅާލަން.">You are on the Kaivaru waitlist. We will notify you at launch, Insha'Allah.</p>
+    </div>
+  </form>
+</div></section>
+
+<!-- FAQ -->
+<section><div class="container" style="max-width:720px">
+  <h2 data-en="Common Questions" data-dv="އާންމު ސުވާލުތައް">Common Questions</h2>
+  <details><summary data-en="Is Kaivaru a dating app?" data-dv="ކައިވަރު ޑޭޓިން އެޕެއްތަ؟">Is Kaivaru a dating app?</summary>
+    <p data-en="No. Kaivaru is for marriage only. Every profile is ID-verified and our guidelines reflect Islamic values." data-dv="ނޫން. ކައިވަރު ހަމަ ކައިވެނި ކުރުމަށްވޭ. ކޮންމެ ޕްރޮފައިލަކީ ވެސް އައިޑީ ޔަގީންކުރެވިފައިވާކަން ޔަގީންވާ.">No. Kaivaru is for marriage only. Every profile is ID-verified and our guidelines reflect Islamic values.</p></details>
+  <details><summary data-en="Who can see my photo and number?" data-dv="ތިޔަ ފޮޓޯ އަދި ނަންބަރު ކާކަށް ފެނޭ؟">Who can see my photo and number?</summary>
+    <p data-en="Nobody — until you accept their interest. Your privacy is fully in your control." data-dv="ކެއެއްވެސް — ކަމާ އެއްބަސްނުވާ ހުރެ. ޝަރުޢީ އިންތިޒާމް މުޅިން ތިޔަ އަތުގައި.">Nobody — until you accept their interest. Your privacy is fully in your control.</p></details>
+  <details><summary data-en="When does Kaivaru launch?" data-dv="ކައިވަރު ކޮން ދުވަހެއްގައި ފަށާނެ؟">When does Kaivaru launch?</summary>
+    <p data-en="We launch soon — waitlist members get first access and a free premium month." data-dv="އަވަސް ކުރިން ފަށާނެ — ވެއިޓްލިސްޓް މެމްބަރުންނަށް ފުރަތަމަ ޑިއުސް އާއި މަފްރޫގި ޕްރީމިއަމް މަހެއް ލިބޭނެ.">We launch soon — waitlist members get first access and a free premium month.</p></details>
+</div></section>
+
+<footer><div class="container">
+  <p><strong>Kaivaru</strong> · ކައިވަރު</p>
+  <p data-en="© 2026 Kaivaru Pvt Ltd · Maldives" data-dv="© 2026 ކައިވަރު · ދިވެހިރާއްޖެ">© 2026 Kaivaru Pvt Ltd · Maldives</p>
+</div></footer>
+
+<script>
+let lang='en';
+function toggleLang(){
+  lang = lang==='en' ? 'dv' : 'en';
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    el.textContent = el.dataset[lang];
+  });
+  document.getElementById('langBtn').textContent = lang==='en' ? 'ދިވެހިބަސް' : 'English';
+  document.documentElement.dir = lang==='dv' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang==='dv' ? 'dv' : 'en';
+  document.body.classList.toggle('dhivehi', lang==='dv');
+}
+function submitForm(e){
+  e.preventDefault();
+  // Store locally for now — connect to Google Sheets / backend later
+  const entry = {
+    name:document.getElementById('f_name').value,
+    phone:document.getElementById('f_phone').value,
+    email:document.getElementById('f_email').value,
+    island:document.getElementById('f_island').value,
+    time:new Date().toISOString()
+  };
+  let list = JSON.parse(localStorage.getItem('kaivaru_waitlist')||'[]');
+  list.push(entry);
+  localStorage.setItem('kaivaru_waitlist', JSON.stringify(list));
+  document.getElementById('formFields').style.display='none';
+  document.getElementById('formSuccess').style.display='block';
+  return false;
+}
+</script>
+</body>
+</html>
